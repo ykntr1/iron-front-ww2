@@ -1,5 +1,39 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Iron Front — WWII FPS</title><link rel="stylesheet" href="/style.css"></head>
-<body><div id="menu" class="panel"><div class="eyebrow">EUROPEAN FRONT · 1944</div><h1>IRON <span>FRONT</span></h1><p>A cinematic WWII browser FPS prototype</p><div class="auth"><input id="username" placeholder="Username (3–20 characters)" maxlength="20"><input id="password" type="password" placeholder="Password (min. 6 characters"><div class="buttons"><button id="login">LOG IN</button><button id="register" class="secondary">CREATE ACCOUNT</button></div><small id="message">Play as guest or create an account to save XP and kills.</small></div><button id="deploy">DEPLOY TO THE FRONT</button><div class="controls">WASD MOVE · MOUSE AIM · CLICK FIRE · ESC RELEASE MOUSE</div></div>
-<div id="hud"><div class="top"><b>IRON FRONT</b><span id="status">CONNECTING</span><span id="score">XP 0 · KILLS 0</span></div><div class="crosshair">+</div><div class="bottom"><span>HEALTH <b id="health">100</b></span><span>RIFLE · 8 / ∞</span><span id="players">SQUAD 1</span></div><div id="hint">CLICK TO LOCK MOUSE</div></div>
-<script src="/socket.io/socket.io.js"></script><script type="module" src="/game.js"></script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171914"><title>IRON FRONT — WWII ONLINE FPS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="menu" class="menu-screen">
+  <div class="menu-backdrop"></div><div class="film-grain"></div>
+  <header class="menu-top"><div class="insignia">★</div><div class="top-caption">EUROPEAN THEATRE <span>•</span> 1944</div><div class="top-actions"><button class="icon-button" id="profileShortcut" aria-label="Profile">♟</button><button class="icon-button" id="settingsShortcut" aria-label="Settings">⚙</button><button class="icon-button" id="quitShortcut" aria-label="Quit">⏻</button></div></header>
+  <main class="menu-layout">
+    <section class="brand-block"><div class="brand-kicker">THE FATE OF EUROPE IS IN YOUR HANDS</div><h1 class="brand-title">IRON<br><span>FRONT</span></h1><div class="brand-subtitle"><span>★</span> WORLD WAR II ONLINE FPS <span>★</span></div><div class="brand-rule"></div>
+      <nav class="main-nav" aria-label="Main menu">
+        <button id="deploy" class="nav-button nav-primary"><span class="nav-arrow">▶</span><span>PLAY ONLINE</span><small>ENTER THE BATTLE</small></button>
+        <button class="nav-button" data-panel="barracks"><span class="nav-arrow">›</span>BARRACKS</button>
+        <button class="nav-button" data-panel="loadout"><span class="nav-arrow">›</span>LOADOUT</button>
+        <button class="nav-button" data-panel="settings"><span class="nav-arrow">›</span>SETTINGS</button>
+        <button class="nav-button" data-panel="credits"><span class="nav-arrow">›</span>CREDITS</button>
+      </nav>
+      <div id="menuDetail" class="menu-detail" hidden></div>
+      <div class="auth-card"><div class="auth-heading">SOLDIER IDENTIFICATION <span>OPTIONAL</span></div><div class="auth-fields"><input id="username" placeholder="Soldier name" maxlength="20" autocomplete="username"><input id="password" type="password" placeholder="Password (6+ characters)" autocomplete="current-password"></div><div class="buttons"><button id="login" class="small-button">LOG IN</button><button id="register" class="small-button secondary">CREATE ACCOUNT</button></div><small id="message">Deploy as guest, or sign in to save XP and kills.</small></div>
+    </section>
+    <aside class="soldier-card"><div class="soldier-label">ACTIVE DUTY</div><div class="soldier-emblem">Ⅱ</div><div class="soldier-name" id="soldierName">UNKNOWN SOLDIER</div><div class="soldier-level">RANK <b id="soldierRank">RECRUIT</b></div><div class="xp-track"><span></span></div><div class="xp-label"><span>COMBAT EXPERIENCE</span><b id="menuXp">0 / 1,000 XP</b></div><div class="soldier-divider"></div><div class="server-line"><span class="server-dot"></span><span>SERVER STATUS</span><b id="menuServer">CONNECTING</b></div><div class="server-line"><span>GAME MODE</span><b>TEAM DEATHMATCH</b></div><div class="server-line"><span>THEATRE</span><b>WESTERN EUROPE</b></div></aside>
+  </main>
+  <footer class="menu-footer"><div><span class="footer-star">★</span> AN UNOFFICIAL WWII FPS PROTOTYPE</div><div>WASD MOVE <i>•</i> MOUSE AIM <i>•</i> CLICK FIRE</div><div>BUILD 0.2.0 <i>•</i> EARLY ACCESS</div></footer>
+</div>
+<div id="hud">
+  <div class="game-vignette"></div><div class="hud-top"><div class="hud-brand">IRON <b>FRONT</b><small>1944</small></div><div class="match-score"><div class="team-score allies"><span>★</span><b id="alliesScore">0</b></div><div class="match-time" id="matchTime">10:00</div><div class="team-score axis"><b id="axisScore">0</b><span>✠</span></div></div><div class="connection-status"><span class="server-dot"></span><span id="status">CONNECTING</span></div></div>
+  <div class="minimap"><div class="map-ring ring-one"></div><div class="map-ring ring-two"></div><span class="map-arrow">▲</span><i class="map-dot dot-a"></i><i class="map-dot dot-b"></i><i class="map-dot dot-c"></i><small>N</small></div>
+  <div class="crosshair"><i></i><b>+</b><i></i></div>
+  <div class="hit-marker" id="hitMarker">✕</div>
+  <div class="hud-bottom"><div class="health-block"><span class="health-cross">✚</span><div><b id="health">100</b><div class="health-bar"><span></span></div></div></div><div class="ammo-block"><div class="weapon-name">M1 GARAND <small>SEMI-AUTOMATIC RIFLE</small></div><div class="ammo-count"><b id="ammo">8</b><span>/ 120</span></div></div></div>
+  <div id="score" class="xp-hud">XP 0 · KILLS 0</div><div id="players" class="squad-hud">SQUAD 1</div><div id="hint">CLICK TO LOCK MOUSE <span>•</span> ESC TO RELEASE</div>
+</div>
+<script src="/socket.io/socket.io.js"></script><script type="module" src="/game.js"></script>
+</body></html>
