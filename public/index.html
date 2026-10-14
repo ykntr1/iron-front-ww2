@@ -40,10 +40,27 @@
 // Keep the PLAY ONLINE control responsive even if the 3D module fails to load.
 document.addEventListener('click',function(event){
  const button=event.target.closest('#deploy');
- if(!button||window.ironGameReady)return;
+ if(!button)return;
  const message=document.getElementById('message');
- if(message)message.textContent='Game module is still loading or failed to start. Refresh the page; if this message remains, check that your browser allows WebGL and external CDN scripts.';
+ if(window.ironGameReady)return;
+ if(message)message.textContent='Starting battlefield… If this message stays here, the live site has not loaded the latest game code or the 3D module failed.';
+ button.disabled=true;
+ button.style.opacity='.7';
+ button.querySelector('span:nth-child(2)').textContent='LOADING BATTLE…';
+ window.setTimeout(function(){
+  if(!window.ironGameReady){
+   button.disabled=false;
+   button.style.opacity='';
+   button.querySelector('span:nth-child(2)').textContent='PLAY ONLINE';
+   if(message)message.textContent='Game could not start. Open Render → Deploys and choose “Manual Deploy → Deploy latest commit”, then refresh this page.';
+  }
+ },8000);
 });
+window.addEventListener('error',function(event){
+ const message=document.getElementById('message');
+ if(message)message.textContent='Loading error: '+(event.message||'game script failed');
+});
+
 </script>
 <script type="module" src="/game.js"></script>
 </body></html>
