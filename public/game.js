@@ -25,3 +25,27 @@ const keys={};document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.cod
 document.addEventListener('mousedown',e=>{if(!started||!locked||e.button!==0)return;if(ammo<=0)return;ammo--;ray.setFromCamera(new THREE.Vector2(0,0),camera);const hits=ray.intersectObjects([...targets.values()].filter(g=>g.visible),true);if(hits.length){let o=hits[0].object;while(o&&!o.userData.id)o=o.parent;if(o?.userData.id)socket.emit('player:shoot',o.userData.id)}});
 const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);if(started&&locked){const forward=new THREE.Vector3(Math.sin(camera.rotation.y),0,Math.cos(camera.rotation.y));const right=new THREE.Vector3(forward.z,0,-forward.x);const move=new THREE.Vector3();if(keys.KeyW)move.addScaledVector(forward,-1);if(keys.KeyS)move.add(forward);if(keys.KeyA)move.addScaledVector(right,-1);if(keys.KeyD)move.add(right);if(move.lengthSq()){move.normalize().multiplyScalar(6*dt);const next=camera.position.clone().add(move);const playerBox=new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(next.x,.9,next.z),new THREE.Vector3(.6,1.8,.6));if(!colliders.some(c=>c.intersectsBox(playerBox)))camera.position.copy(next)}socket.emit('player:move',{x:camera.position.x,z:camera.position.z,yaw:camera.rotation.y})}renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+const menuDetail=$('menuDetail');
+const menuPanels={
+ barracks:['BARRACKS','Your soldier profile and combat record. Sign in or create an account to save XP and kills between sessions.'],
+ loadout:['FIELD LOADOUT','PRIMARY  M1 GARAND\nSECONDARY  SERVICE PISTOL\nEXPLOSIVE  FRAGMENTATION GRENADE\n\nAdditional weapons and perks will be added in future updates.'],
+ settings:['SETTINGS','GRAPHICS  Balanced\nAUDIO  Browser default\nCONTROLS  WASD to move · Mouse to aim · Left click to fire · R to reload · ESC to release mouse'],
+ credits:['CREDITS','IRON FRONT WWII is an independent browser-game prototype. Three.js rendering and Socket.IO multiplayer services. Not affiliated with any historical military organization.']
+};
+document.querySelectorAll('[data-panel]').forEach(button=>button.addEventListener('click',()=>{
+ const key=button.dataset.panel;const data=menuPanels[key];if(!data)return;
+ if(!menuDetail.hidden&&menuDetail.dataset.panel===key){menuDetail.hidden=true;menuDetail.innerHTML='';return}
+ menuDetail.dataset.panel=key;menuDetail.innerHTML='<button class="detail-close" aria-label="Close">✕</button><h3>'+data[0]+'</h3><p>'+data[1].replace(/\n/g,'<br>')+'</p>';menuDetail.hidden=false;
+ menuDetail.querySelector('.detail-close').onclick=()=>{menuDetail.hidden=true;menuDetail.innerHTML=''};
+}));
+$('settingsShortcut').onclick=()=>document.querySelector('[data-panel="settings"]').click();
+$('profileShortcut').onclick=()=>{ $('username').focus(); $('message').textContent='Sign in or create an account to save your soldier progress.'; };
+$('quitShortcut').onclick=()=>{if(started){document.exitPointerLock?.();started=false;$('hud').style.display='none';$('menu').classList.remove('hidden');}else{$('message').textContent='You can close this browser tab to leave the game.';}};
+socket.on('connect',()=>{$('menuServer').textContent='ONLINE';$('menuServer').style.color='#b9d49f'});
+socket.on('disconnect',()=>{$('menuServer').textContent='OFFLINE';$('menuServer').style.color='#d98a75'});
+if(profile){$('soldierName').textContent=profile.username||'UNKNOWN SOLDIER';$('menuXp').textContent=(profile.xp||0)+' XP';$('soldierRank').textContent=(profile.xp||0)>=1000?'VETERAN':'RECRUIT';}
+const oldAuth=auth;
+auth=async function(url){await oldAuth(url);if(profile){$('soldierName').textContent=profile.username||'UNKNOWN SOLDIER';$('menuXp').textContent=(profile.xp||0)+' XP';$('soldierRank').textContent=(profile.xp||0)>=1000?'VETERAN':'RECRUIT';}};
+const oldMeHandler=()=>{};
+socket.on('player:me',p=>{if(!p)return;$('soldierName').textContent=p.username||'FIELD SOLDIER';$('menuXp').textContent=(p.xp||0)+' XP';$('soldierRank').textContent=(p.xp||0)>=1000?'VETERAN':'RECRUIT';$('soldierCardUnused')?.remove();});
