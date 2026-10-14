@@ -1,15 +1,47 @@
-# Iron Front — WWII Browser FPS Prototype
+# Iron Front — WWII Browser FPS
 
-A desktop-first browser FPS prototype with a stylized WWII village, mouse-look, WASD movement, shooting, bots, multiplayer position sync, account registration/login, and XP/kills persistence.
+Iron Front, masaüstü tarayıcılar için geliştirilen 2. Dünya Savaşı temalı FPS prototipidir.
 
-## Deploy to Render
-1. Open Render Dashboard and choose **New + → Blueprint**.
-2. Connect this GitHub repository: https://github.com/ykntr1/iron-front-ww2
-3. Render detects `render.yaml`. Review and apply.
-4. Wait for the deploy to finish, then open the `onrender.com` URL.
+## Özellikler
+- Three.js ile birinci şahıs 3D savaş alanı
+- WASD hareketi, fareyle bakış ve nişan, ateş etme, şarjör yenileme
+- Yapay zekâ düşmanları ve temel savaş döngüsü
+- Socket.IO ile oyuncu konumu / çok oyunculu senkronizasyon altyapısı
+- bcrypt ile parola hashleme, JWT oturumu ve SQLite kullanıcı kayıtları
+- XP ve skor kayıtları için başlangıç düzeyinde kalıcı profil desteği
+- Render dağıtımı için Blueprint yapılandırması
 
-## Play
-Register an account or deploy as guest. WASD to move, mouse to aim, click to fire, R to reload, Esc to release mouse.
+## Yerelde çalıştırma
+Node.js 20 kullanılması önerilir.
 
-## Notes
-This is an early playable prototype, not a production game. It loads Three.js from a CDN and needs internet access. Free web services may sleep when idle. SQLite data on Render's ephemeral filesystem can be lost during redeploy/restart; use a persistent disk or managed database before relying on saved accounts/progression. Multiplayer state and bot logic are prototype-grade and require hardening before public competitive use.
+```bash
+npm install
+npm start
+```
+
+Tarayıcıdan http://localhost:3000 adresini açın.
+
+## Render'a dağıtım
+1. https://dashboard.render.com/ adresine girin.
+2. **New + → Blueprint** seçin.
+3. GitHub deposu olarak https://github.com/ykntr1/iron-front-ww2 adresini bağlayın.
+4. Render'ın kökteki `render.yaml` dosyasını algıladığını doğrulayın ve dağıtımı başlatın.
+5. Dağıtım bittikten sonra Render'ın verdiği `onrender.com` adresini açın. Sağlık kontrolü `/api/health` yolundadır.
+
+Render, `JWT_SECRET` değerini Blueprint'te otomatik üretir. Bu değeri kaynak koda yazmayın veya herkese açık paylaşmayın.
+
+## Kontroller
+- **W A S D:** hareket
+- **Fare:** kamera / nişan
+- **Sol tık:** ateş
+- **R:** yeniden doldur
+- **Shift:** koşma
+- **Space:** zıplama (uygulanan sürümde destekleniyorsa)
+- **Esc:** fare kilidini bırak
+
+## Kalıcılık ve yayın notları
+Render'ın ücretsiz web servislerinde yerel dosya sistemi kalıcı değildir. SQLite veritabanı servis yeniden başlatıldığında veya yeniden dağıtıldığında kaybolabilir. Hesapların ve ilerlemenin kalıcı olması için Render Persistent Disk (ücretli plan koşullarını kontrol edin) veya yönetilen PostgreSQL kullanıp veritabanı bağlantısını sunucuya ekleyin.
+
+Bu proje erken aşama prototiptir; üretim öncesinde sunucu tarafı isabet/hasar doğrulaması, oran sınırlama, güvenlik testleri, hata izleme, yedekleme, gerçek eşleştirme ve gecikme telafisi gerekir. Mevcut bot ve multiplayer davranışı rekabetçi yayın için hazır kabul edilmemelidir.
+
+Three.js CDN üzerinden yüklendiği için oyun istemcisi internet bağlantısı gerektirir. Grafikler ve oynanış, Call of Duty: WWII seviyesinde AAA içerik değildir; bu hedef için özel/lisanslı varlıklar, animasyonlar, ses tasarımı ve ileri render çalışması gerekir.
