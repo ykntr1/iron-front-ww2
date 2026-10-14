@@ -2,6 +2,30 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
 const $=id=>document.getElementById(id);
 let token=localStorage.getItem('ironToken')||'',profile=null,started=false,locked=false,ammo=8,health=100;
 const socket=io();
+// Bind PLAY ONLINE before building the 3D scene so a graphics initialization error
+// cannot silently leave the main-menu button without a click handler.
+$('deploy').onclick=()=>{
+ if(!window.ironRenderer){
+  $('message').textContent='Game graphics are still loading or WebGL failed. Refresh the page; if it continues, enable hardware acceleration in your browser.';
+  return;
+ }
+ started=true;
+ $('menu').classList.add('hidden');
+ $('hud').style.display='block';
+ $('status').textContent=socket.connected?'ONLINE':'CONNECTING';
+ socket.emit('player:join',{token});
+ window.ironRenderer.domElement.requestPointerLock?.();
+};
+window.addEventListener('error',e=>{
+ const message='Game error: '+(e.message||'unknown error');
+ const target=$('message'); if(target)target.textContent=message;
+ console.error(message,e.error||'');
+});
+window.addEventListener('unhandledrejection',e=>{
+ const message='Game loading error: '+(e.reason?.message||String(e.reason||'unknown error'));
+ const target=$('message'); if(target)target.textContent=message;
+ console.error(message,e.reason||'');
+});
 socket.on('connect',()=>{$('status').textContent='ONLINE';$('menuServer').textContent='ONLINE';$('menuServer').style.color='#b9d49f'});
 socket.on('disconnect',()=>{$('status').textContent='RECONNECTING';$('menuServer').textContent='OFFLINE';$('menuServer').style.color='#d98a75'});
 $('login').onclick=()=>auth('/api/login');$('register').onclick=()=>auth('/api/register');
@@ -11,6 +35,7 @@ const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x87949a);scene.fog=new THREE.FogExp2(0x929b9b,.012);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,300);camera.position.set(0,1.7,8);camera.rotation.order='YXZ';
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+window.ironRenderer=renderer;
 renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xc8d6df,0x302e27,1.75));
 const sun=new THREE.DirectionalLight(0xffd6a1,2.8);sun.position.set(-28,42,18);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-48;sun.shadow.camera.right=48;sun.shadow.camera.top=48;sun.shadow.camera.bottom=-48;scene.add(sun);
@@ -117,7 +142,7 @@ function createBot(b){if(targets.has(b.id))return targets.get(b.id);const g=make
 function updateWorld(data){if(!data)return;if(data.bots){bots=data.bots;for(const b of bots){const g=createBot(b);g.position.set(b.x,0,b.z);g.visible=b.hp>0}}
  if(data.players){for(const p of data.players){if(p.id===socket.id)continue;let g=remote.get(p.id);if(!g){g=makeSoldier(p.id,true);scene.add(g);remote.set(p.id,g)}g.position.set(p.x,0,p.z);g.rotation.y=p.yaw||0;}for(const [id,g]of remote)if(!data.players.some(p=>p.id===id)){scene.remove(g);remote.delete(id)}}}
 socket.on('world:init',updateWorld);socket.on('world:update',updateWorld);socket.on('players:update',ps=>updateWorld({players:ps}));
-$('deploy').onclick=()=>{started=true;$('menu').classList.add('hidden');$('hud').style.display='block';socket.emit('player:join',{token});renderer.domElement.requestPointerLock?.()};
+// PLAY ONLINE handler is registered before scene construction above.
 socket.on('player:me',p=>{profile=p;$('score').textContent='XP '+p.xp+' · KILLS '+p.kills;refreshProfile(p)});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;$('hint').style.display=locked?'none':'block'});
 renderer.domElement.addEventListener('click',()=>{if(started&&!locked)renderer.domElement.requestPointerLock()});
@@ -151,3 +176,4 @@ $('settingsShortcut').onclick=()=>document.querySelector('[data-panel="settings"
 $('profileShortcut').onclick=()=>{$('username').focus();$('message').textContent='Sign in or create an account to save your soldier progress.'};
 $('quitShortcut').onclick=()=>{if(started){document.exitPointerLock?.();started=false;$('hud').style.display='none';$('menu').classList.remove('hidden')}else $('message').textContent='You can close this browser tab to leave the game.'};
 if(profile)refreshProfile(profile);
+window.ironGameReady=true;
