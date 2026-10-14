@@ -37,30 +37,37 @@
 </div>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-// Keep the PLAY ONLINE control responsive even if the 3D module fails to load.
-document.addEventListener('click',function(event){
- const button=event.target.closest('#deploy');
- if(!button)return;
+// Diagnose the exact reason the 3D game module fails instead of overwriting the error after 8 seconds.
+(function(){
+ const button=document.getElementById('deploy');
  const message=document.getElementById('message');
- if(window.ironGameReady)return;
- if(message)message.textContent='Starting battlefield… If this message stays here, the live site has not loaded the latest game code or the 3D module failed.';
- button.disabled=true;
- button.style.opacity='.7';
- button.querySelector('span:nth-child(2)').textContent='LOADING BATTLE…';
- window.setTimeout(function(){
-  if(!window.ironGameReady){
-   button.disabled=false;
-   button.style.opacity='';
-   button.querySelector('span:nth-child(2)').textContent='PLAY ONLINE';
-   if(message)message.textContent='Game could not start. Open Render → Deploys and choose “Manual Deploy → Deploy latest commit”, then refresh this page.';
+ let lastError='';
+ function showError(text){lastError=text;if(message)message.textContent=text;console.error('[Iron Front]',text);}
+ window.addEventListener('error',function(event){
+  if(event.target&&event.target!==window){
+   showError('Game asset failed to load: '+(event.target.src||event.target.href||event.target.tagName));
+   return;
   }
- },8000);
-});
-window.addEventListener('error',function(event){
- const message=document.getElementById('message');
- if(message)message.textContent='Loading error: '+(event.message||'game script failed');
-});
-
+  showError('Game JavaScript error: '+(event.message||'unknown error')+(event.filename?' ('+event.filename.split('/').pop()+':'+(event.lineno||'?')+')':''));
+ });
+ window.addEventListener('unhandledrejection',function(event){
+  showError('Game module error: '+(event.reason&&event.reason.message?event.reason.message:String(event.reason||'unknown rejection')));
+ });
+ document.addEventListener('click',function(event){
+  if(!event.target.closest('#deploy'))return;
+  if(window.ironGameReady)return;
+  if(message)message.textContent='Loading the battlefield…';
+  button.disabled=true;button.style.opacity='.7';
+  button.querySelector('span:nth-child(2)').textContent='LOADING BATTLE…';
+  window.setTimeout(function(){
+   if(window.ironGameReady)return;
+   button.disabled=false;button.style.opacity='';
+   button.querySelector('span:nth-child(2)').textContent='PLAY ONLINE';
+   if(message&&!lastError)showError('The game module did not finish loading. Check internet access to jsDelivr (Three.js CDN) and WebGL. Open the browser Console for the first red error, then share it here.');
+   else if(message)message.textContent=lastError+' — Game did not finish loading; see the browser Console for details.';
+  },8000);
+ })();
+})();
 </script>
-<script type="module" src="/game.js"></script>
+<script type="module" src="/game.js?v=diag-20261014" onerror="document.getElementById('message').textContent='Could not download /game.js. Render may be serving an old or incomplete deployment; open Render → Deploys and check the latest deploy.'"></script>
 </body></html>
