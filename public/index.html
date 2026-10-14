@@ -35,5 +35,15 @@
   <div class="hud-bottom"><div class="health-block"><span class="health-cross">✚</span><div><b id="health">100</b><div class="health-bar"><span></span></div></div></div><div class="ammo-block"><div class="weapon-name">M1 GARAND <small>SEMI-AUTOMATIC RIFLE</small></div><div class="ammo-count"><b id="ammo">8</b><span>/ 120</span></div></div></div>
   <div id="score" class="xp-hud">XP 0 · KILLS 0</div><div id="players" class="squad-hud">SQUAD 1</div><div id="hint">CLICK TO LOCK MOUSE <span>•</span> ESC TO RELEASE</div>
 </div>
-<script src="/socket.io/socket.io.js"></script><script type="module" src="/game.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// Keep the PLAY ONLINE control responsive even if the 3D module fails to load.
+document.addEventListener('click',function(event){
+ const button=event.target.closest('#deploy');
+ if(!button||window.ironGameReady)return;
+ const message=document.getElementById('message');
+ if(message)message.textContent='Game module is still loading or failed to start. Refresh the page; if this message remains, check that your browser allows WebGL and external CDN scripts.';
+});
+</script>
+<script type="module" src="/game.js"></script>
 </body></html>
