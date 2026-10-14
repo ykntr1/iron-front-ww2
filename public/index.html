@@ -66,7 +66,7 @@
    if(message&&!lastError)showError('The game module did not finish loading. Check internet access to jsDelivr (Three.js CDN) and WebGL. Open the browser Console for the first red error, then share it here.');
    else if(message)message.textContent=lastError+' — Game did not finish loading; see the browser Console for details.';
   },8000);
- })();
+ });
 })();
 </script>
 <script type="module" src="/game.js?v=diag-20261014" onerror="document.getElementById('message').textContent='Could not download /game.js. Render may be serving an old or incomplete deployment; open Render → Deploys and check the latest deploy.'"></script>
